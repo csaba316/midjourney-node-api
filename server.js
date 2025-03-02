@@ -1,37 +1,29 @@
 const express = require("express");
-const fs = require("fs");
 const cors = require("cors");
-const app = express();
 
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+// ✅ Enable CORS for all origins
 app.use(cors());
 app.use(express.json());
 
-// Home Route
-app.get("/", (req, res) => {
-    res.send("<h2>MidJourney Image API is Running 🚀</h2>");
-});
-
-// Save received image URL
+// ✅ Handle image forwarding at `/receive-image`
 app.post("/receive-image", (req, res) => {
-    const { image_url } = req.body;
-    if (image_url) {
-        fs.writeFileSync("latest_image.json", JSON.stringify({ image_url }));
-        console.log("Image received:", image_url);
-        res.sendStatus(200);
-    } else {
-        res.status(400).json({ error: "No image URL provided" });
+    console.log("📥 Received image from Python Bot:", req.body);
+
+    if (!req.body.image_url) {
+        return res.status(400).json({ error: "No image URL received" });
     }
+
+    console.log(`✅ Image URL: ${req.body.image_url}`);
+
+    // 🔹 Here, you can process the image (store it, send it elsewhere, etc.)
+
+    res.json({ message: "Image received successfully!" });
 });
 
-// Serve the latest image URL
-app.get("/get-latest-image", (req, res) => {
-    if (fs.existsSync("latest_image.json")) {
-        res.json(JSON.parse(fs.readFileSync("latest_image.json", "utf8")));
-    } else {
-        res.json({ image_url: null });
-    }
+// Start server
+app.listen(PORT, () => {
+    console.log(`🚀 Node.js Server is running on port ${PORT}...`);
 });
-
-// Start the server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, "0.0.0.0", () => console.log(`Server running on port ${PORT}`));
