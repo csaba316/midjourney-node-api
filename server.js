@@ -4,26 +4,34 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// ✅ Enable CORS for all origins
 app.use(cors());
 app.use(express.json());
 
-// ✅ Handle image forwarding at `/receive-image`
+let lastReceivedImage = null; // Store the latest received image URL
+
+// ✅ Handle incoming images from the Discord bot
 app.post("/receive-image", (req, res) => {
-    console.log("📥 Received image from Python Bot:", req.body);
+    console.log("📥 Received image:", req.body);
 
     if (!req.body.image_url) {
         return res.status(400).json({ error: "No image URL received" });
     }
 
-    console.log(`✅ Image URL: ${req.body.image_url}`);
+    lastReceivedImage = req.body.image_url; // Store the latest image URL
+    console.log(`✅ Image URL stored: ${lastReceivedImage}`);
 
-    // 🔹 Here, you can process the image (store it, send it elsewhere, etc.)
-
-    res.json({ message: "Image received successfully!" });
+    res.json({ message: "Image received successfully!", image_url: lastReceivedImage });
 });
 
-// Start server
+// ✅ Serve the latest image for Elementor to fetch
+app.get("/latest-image", (req, res) => {
+    if (!lastReceivedImage) {
+        return res.status(404).json({ error: "No image available" });
+    }
+    res.json({ image_url: lastReceivedImage });
+});
+
+// ✅ Start the server
 app.listen(PORT, () => {
     console.log(`🚀 Node.js Server is running on port ${PORT}...`);
 });
